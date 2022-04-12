@@ -1,0 +1,35 @@
+<resources>
+    <string name="start_text">*Вступительный текст*</string>
+    <string name="enter_to_system">Войти</string>
+    <string name="start_reg">Зарегестрироваться</string>
+
+    <string name="app_name">My Application</string>
+    <string name="no_user_input">Введите оставшиеся данные</string>
+    <string name="logo">*Текст*</string>
+
+    <string name="name_hint">Введите имя</string>
+    <string name="surname_hint">Введите фамилию</string>
+    <string name="email_hint">Введите email</string>
+    <string name="password_hint">Введите пароль</string>
+    <string name="gender_hint">Введите свой пол</string>
+    <string name="age_hint">Введите свой возраст</string>
+    <string name="date_of_birth_hint">Введите дату рождения</string>
+
+    <string name="client_reg">Зарегестрироваться как клиент</string>
+    <string name="weight_hint">Введите свой вес</string>
+    <string name="height_hint">Введите свой рост</string>
+
+    <string name="doctor_reg">Зарегестрироваться как сотрудник</string>
+    <string name="doctor_stage_hint">Введите свой стаж работы</string>
+    <string name="finish_reg">Окончить регестрацию</string>
+
+    <string name="title_activity_main2">MainActivity2</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+</resources>
