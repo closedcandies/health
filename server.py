@@ -50,7 +50,8 @@ class Server:
                 is_user, email, password = info
                 id = await self.check_auth_data(is_user, email, password)
                 if id != -1:
-                    self.clients_active[id] = client_socket
+                    if is_user:
+                        self.clients_active[id] = client_socket
                     await self.send_message_to_client(self.get_user_chats(is_user, id), client_socket=client_socket)
                 else:
                     await self.send_message_to_client('AUTH_FAILED', client_socket=client_socket)
@@ -63,7 +64,7 @@ class Server:
             elif mode == SEND_MSG:
                 user_id, is_user, chat_id = info
                 await self.add_new_message_to_chat(chat_id, user_id, text)
-                await self.notify_user_about_new_message(is_user, chat_id)# TODO: заняться обработкой чата. Добавить методы дампа чата в бд и отправки и обновления чата при входе пользователя
+                await self.notify_user_about_new_message(is_user, chat_id)
 
             elif mode == NEW_CHAT:
                 user_id, doctor_id = info
@@ -84,6 +85,10 @@ class Server:
         #TODO: исправить иньекцию и дописать обработку для urgent=True
         query = 'SELECT * FROM doctors WHERE '
         delimiter = ''
+
+        if urgent:
+            query += 'id IN ({ids});'.format(ids=', '.join(self.clients_active.keys()))
+
         if specialization != 0:
             query += delimiter + 'specialization= ' + specialization + ' '
             delimiter = 'AND '
@@ -96,6 +101,7 @@ class Server:
         if lastName != 0:
             query += delimiter + 'lastname= ' + lastName + ' '
             delimiter = 'AND '
+
         query += delimiter + 'stage>= ' + stage + ';'
         result = await self.database.execute(query)
 
