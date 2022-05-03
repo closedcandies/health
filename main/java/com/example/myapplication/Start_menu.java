@@ -10,7 +10,6 @@ import android.widget.Button;
 public class Start_menu extends AppCompatActivity {
 
     private Button enter_to_system, start_reg;
-    private Data_base data_base;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

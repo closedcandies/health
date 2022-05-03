@@ -14,7 +14,6 @@ public class MainActivity extends AppCompatActivity {
     private EditText user_name, user_surname, user_email, user_password,
             user_gender, user_age, user_date_of_birth;
     private Button client_reg, doctor_reg;
-    private Data_base data_base;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,14 +44,15 @@ public class MainActivity extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                 }
                 else{
-//                    data_base.add_to_data_base(new User(user_name.getText().toString().trim(),
-//                            user_surname.getText().toString().trim(),
-//                            user_email.getText().toString().trim(),
-//                            user_password.getText().toString().trim(),
-//                            user_gender.getText().toString().trim(),
-//                            Integer.parseInt(user_age.getText().toString().trim()),
-//                            user_date_of_birth.getText().toString().trim()));
-                    startActivity(new Intent(MainActivity.this, Registration.class));
+                    Intent intent = new Intent(MainActivity.this, Registration.class);
+                    intent.putExtra("user", new User(user_name.getText().toString().trim(),
+                            user_surname.getText().toString().trim(),
+                            user_email.getText().toString().trim(),
+                            user_password.getText().toString().trim(),
+                            user_gender.getText().toString().trim(),
+                            Integer.parseInt(user_age.getText().toString().trim()),
+                            user_date_of_birth.getText().toString().trim()).toString());
+                    startActivity(intent);
                 }
             }
         });
@@ -69,14 +69,15 @@ public class MainActivity extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                 }
                 else{
-//                    data_base.add_to_data_base(new User(user_name.getText().toString().trim(),
-//                            user_surname.getText().toString().trim(),
-//                            user_email.getText().toString().trim(),
-//                            user_password.getText().toString().trim(),
-//                            user_gender.getText().toString().trim(),
-//                            Integer.parseInt(user_age.getText().toString().trim()),
-//                            user_date_of_birth.getText().toString().trim()));
-                    startActivity(new Intent(MainActivity.this, Doctor_registration.class));
+                    Intent intent = new Intent(MainActivity.this, Doctor_registration.class);
+                    intent.putExtra("user", new User(user_name.getText().toString().trim(),
+                            user_surname.getText().toString().trim(),
+                            user_email.getText().toString().trim(),
+                            user_password.getText().toString().trim(),
+                            user_gender.getText().toString().trim(),
+                            Integer.parseInt(user_age.getText().toString().trim()),
+                            user_date_of_birth.getText().toString().trim()).toString());
+                    startActivity(intent);
                 }
             }
         });
