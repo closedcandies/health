@@ -13,6 +13,7 @@ public class Registration extends AppCompatActivity {
 
     private EditText client_weight, client_height;
     private Button client_reg_finish;
+    private Work_with_server work_with_server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +33,25 @@ public class Registration extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                 }
                 else{
-                    startActivity(new Intent(Registration.this, Client_interface.class));
+                    Intent intent = getIntent();
+                    //ниже получаем строчку вида: client_registration <параметры юзера> <праметры клиента(
+                    // вес, рост)>. Тебе надо будет обрабатывать эту строку при запросе к бд.
+                    String request = "client_registration " + intent.getStringExtra("user") + " " +
+                            client_weight.getText().toString().trim() + " " +
+                            client_height.getText().toString().trim();
+                    //далее ответ от твоего сервера в виде строки "not same user" или "has same user"
+                    String response = work_with_server.send_get(request);
+                    if (!response.equals("error")){
+                        if(response.equals("not same user")){
+                            Intent intent1 = new Intent(Registration.this, Client_interface.class);
+                            intent1.putExtra("client", request);
+                            startActivity(intent1);
+                        }
+                        else {
+                            Toast.makeText(Registration.this, R.string.has_same_user,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
                 }
             }
         });

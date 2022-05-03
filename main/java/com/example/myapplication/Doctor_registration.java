@@ -13,6 +13,7 @@ public class Doctor_registration extends AppCompatActivity {
 
     private EditText doctor_stage;
     private Button doctor_reg_finish;
+    private Work_with_server work_with_server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +31,23 @@ public class Doctor_registration extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                 }
                 else{
-                    startActivity(new Intent(Doctor_registration.this, Doctor_interface.class));
+                    Intent intent = getIntent();
+                    //тоже, что и в Registration, но начинается с doctor_registration и оканчивается
+                    // параметрами доктора(стаж).
+                    String request = "doctor_registration " + intent.getStringExtra("user") +
+                            " " + doctor_stage.getText().toString().trim();
+                    String response = work_with_server.send_get(request);
+                    if (!response.equals("error")){
+                        if(response.equals("not same user")){
+                            Intent intent1 = new Intent(Doctor_registration.this, Doctor_interface.class);
+                            intent1.putExtra("doctor", request);
+                            startActivity(intent1);
+                        }
+                        else {
+                            Toast.makeText(Doctor_registration.this, R.string.has_same_user,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
                 }
             }
         });

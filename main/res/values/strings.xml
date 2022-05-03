@@ -19,9 +19,15 @@
     <string name="weight_hint">Введите свой вес</string>
     <string name="height_hint">Введите свой рост</string>
 
+    <string name="has_same_user">Такой пользователь уже существует</string>
+    <string name="no_same_user">Такого пользователя не существует</string>
+
     <string name="doctor_reg">Зарегестрироваться как сотрудник</string>
     <string name="doctor_stage_hint">Введите свой стаж работы</string>
     <string name="finish_reg">Окончить регестрацию</string>
+
+    <string name="enter_to_system_client">Войти как клиент</string>
+    <string name="enter_to_system_doctor">Войти как доктор</string>
 
     <string name="title_activity_main2">MainActivity2</string>
     <!-- Strings used for fragments for navigation -->
