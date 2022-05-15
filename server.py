@@ -36,7 +36,7 @@ class Server:
             client = Client(client_socket, client_addres)
 
             self.users.append(client)
-            self.loop.create_task(self.listen_client(client.socket))
+            await self.loop.create_task(self.listen_client(client.socket))
 
     async def listen_client(self, client_socket):
         while True:
@@ -82,6 +82,7 @@ class Server:
                                                 # TODO: исправить иньекцию и добавить хеширование пароля
         result = await self.database.execute(
             "SELECT id FROM {table} WHERE email={email} AND password={password};".format(table=table, email=email, password=password))
+        result = list(await result.fetchone())[0]
 
         return result if result else -1
 
@@ -108,6 +109,7 @@ class Server:
 
         query += delimiter + 'stage>= ' + stage + ';'
         result = await self.database.execute(query)
+        result = list(await result.fetchall())
 
         return result
 
@@ -128,13 +130,15 @@ class Server:
         companion = 'doctor_id' if is_user else 'user_id'
         user = 'user_id' if is_user else 'doctor_id'
         result = await self.database.execute('SELECT id, {companion} FROM chats WHERE {user} = {user_id};')
+        result = list(await result.fetchall())
         return result if result else -1
 
     async def start_new_chat(self, user_id, doctor_id):
         try:
             await self.database.execute('INSERT INTO chats values(user_id={user_id}, doctor_id={doctor_id});')
             await self.database.commit()
-            new_chat_id = await self.database.execute(f'SELECT id FROM chats WHERE user_id={user_id} and doctor_id={doctor_id};')
+            result = await self.database.execute(f'SELECT id FROM chats WHERE user_id={user_id} and doctor_id={doctor_id};')
+            new_chat_id = list(await result.fetchone())[0]
             return new_chat_id
         except Exception as e:
             print(e)
@@ -142,16 +146,17 @@ class Server:
 
     async def add_new_message_to_chat(self, chat_id, sender_id, message):
         try:
-            await self.database.execute(f'''UPDATE chats SET messages=messages+{DELIMITER + sender_id+ ':' + message} WHERE id={chat_id};''')
+            await self.database.execute(f'''UPDATE chats SET messages=messages+{DELIMITER + sender_id+ ':' + message} WHERE id={chat_id};''')   # здесь может быть прикол с курсором
             await self.database.commit()
         except Exception as e:
             print(e)
 
     async def notify_user_about_new_message(self, is_user, chat_id):
         companion_type = 'doctor_id' if is_user else 'user_id'
-        companion = await self.database.execute(f'''SELECT {companion_type} FROM chats WHERE chat_id = {chat_id}''')
+        result = await self.database.execute(f'''SELECT {companion_type} FROM chats WHERE chat_id = {chat_id}''')
+        companion = list(await result.fetchone())[0]
         if companion in self.clients_active:
-            await self.send_message_to_client(SEND_MSG, companion)  # жалуется... Надо проверить, в каком формате получаем ответ из бд
+            await self.send_message_to_client(SEND_MSG, companion)
 
     async def sign_in_new_user(self, info):
         is_user = info[0]
@@ -171,7 +176,8 @@ class Server:
         if not already_exists:
             await self.database.execute("INSERT INTO {table} VALUES ({query});")
             await self.database.commit()
-            id = await self.database.execute("SELECT id FROM {table} WHERE email = {email} AND password = {password};")
+            result = await self.database.execute("SELECT id FROM {table} WHERE email = {email} AND password = {password};")
+            id = list(await result.fetchone())[0]
             return id
         else:
             return 'HAS SAME USER'
