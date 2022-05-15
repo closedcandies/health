@@ -6,7 +6,7 @@ from client import Client
 
 MESSAGE_WEIGHT = 2048
 
-AUTH, SEND_MSG, SEARCH, NEW_CHAT = 'au', 'smg', 'srch', 'nchat'
+AUTH, SEND_MSG, SEARCH, NEW_CHAT, SGNIN = 'au', 'smg', 'srch', 'nchat', ''
 
 DELIMITER = '%%'
 
@@ -55,6 +55,10 @@ class Server:
                     await self.send_message_to_client(self.get_user_chats(is_user, id), client_socket=client_socket)
                 else:
                     await self.send_message_to_client('AUTH_FAILED', client_socket=client_socket)
+
+            if mode == SGNIN:
+                result = await self.sign_in_new_user(info)
+                await self.send_message_to_client(result, client_socket=client_socket)
 
             elif mode == SEARCH:
                 specialization, firstName, middleName, lastName, stage = info
@@ -148,3 +152,27 @@ class Server:
         companion = await self.database.execute(f'''SELECT {companion_type} FROM chats WHERE chat_id = {chat_id}''')
         if companion in self.clients_active:
             await self.send_message_to_client(SEND_MSG, companion)  # жалуется... Надо проверить, в каком формате получаем ответ из бд
+
+    async def sign_in_new_user(self, info):
+        is_user = info[0]
+
+        if is_user:
+            firstname, lastname, email, password, dateofbirth, weight, height, *info = info[1:]
+            query = 'firstname = {firstname}, lastname = {lastname}, email = {email}, password = {password}, dateofbirth = {dateofbirth},' \
+                    ' weight = {weight}, height = {height}, info = {info}'     # здесь может сломаться запрос, потому что тип string, а мы скобочки над {} не ставим
+        if not is_user:
+            firstname, middlename, lastname, age, specialization, email, password, stage = info[1:]
+            query = 'firstname = {firstname}, middlename = {middlename}, lastname = {lastname}, email = {email}, age = {age}, stage = {stage},' \
+                    ' specialization = {specialization}, password = {password}, info = {info}'
+
+        table = 'users' if is_user else 'doctors'
+        already_exists = await self.database.execute("SELECT * from {table} WHERE email={email};")
+
+        if not already_exists:
+            await self.database.execute("INSERT INTO {table} VALUES ({query});")
+            await self.database.commit()
+            id = await self.database.execute("SELECT id FROM {table} WHERE email = {email} AND password = {password};")
+            return id
+        else:
+            return 'HAS SAME USER'
+
