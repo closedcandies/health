@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
         <activity
+            android:name=".Doctor_data"
+            android:exported="false" />
+        <activity
+            android:name=".Client_data"
+            android:exported="false" />
+        <activity
             android:name=".Doctor_interface"
             android:exported="false" />
         <activity

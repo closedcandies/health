@@ -45,9 +45,6 @@ public class Enter_to_system extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                 }
                 else{
-                    //отличие от Registration в том, что начинается не с "registration", а с "enter"
-                    //и в отсутствии персональных параметров, так как и рост и вес и стаж работы
-                    //могут менятся со временем. Да и вообще проверка по этим параметрам не должна осуществляться.
                     String request = new User(check_user_name.getText().toString().trim(),
                             check_user_surname.getText().toString().trim(),
                             check_user_email.getText().toString().trim(),

@@ -34,12 +34,9 @@ public class Registration extends AppCompatActivity {
                 }
                 else{
                     Intent intent = getIntent();
-                    //ниже получаем строчку вида: client_registration <параметры юзера> <праметры клиента(
-                    // вес, рост)>. Тебе надо будет обрабатывать эту строку при запросе к бд.
                     String request = "client_registration " + intent.getStringExtra("user") + " " +
                             client_weight.getText().toString().trim() + " " +
                             client_height.getText().toString().trim();
-                    //далее ответ от твоего сервера в виде строки "not same user" или "has same user"
                     String response = work_with_server.send_get(request);
                     if (!response.equals("error")){
                         if(response.equals("not same user")){

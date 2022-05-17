@@ -32,8 +32,6 @@ public class Doctor_registration extends AppCompatActivity {
                 }
                 else{
                     Intent intent = getIntent();
-                    //тоже, что и в Registration, но начинается с doctor_registration и оканчивается
-                    // параметрами доктора(стаж).
                     String request = "doctor_registration " + intent.getStringExtra("user") +
                             " " + doctor_stage.getText().toString().trim();
                     String response = work_with_server.send_get(request);

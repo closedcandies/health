@@ -29,13 +29,15 @@
     <string name="enter_to_system_client">Войти как клиент</string>
     <string name="enter_to_system_doctor">Войти как доктор</string>
 
-    <string name="title_activity_main2">MainActivity2</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
+    <string name="change_data">Изменить мои параметры</string>
+    <string name="order_consultation">Заказать консультацию</string>
+    <string name="give_consultation">Записать на консультацию</string>
+    <string name="no_give_consultation">Не записывать на консультацию</string>
+    <string name="find_by_stage">Введите стаж доктора</string>
+    <string name="has_doctor">Успешно</string>
+    <string name="no_doctor">Извините, записаться не удалось</string>
+    <string name="change">Изменить</string>
+    <string name="successfully">Успешно</string>
+    <string name="unsuccessfully">Не удалось измнить данные</string>
 
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
 </resources>

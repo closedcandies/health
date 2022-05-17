@@ -15,7 +15,6 @@ public class Work_with_server {
             try {
                 clientSocket = new Socket();
                 clientSocket.connect(new InetSocketAddress("localhost", 4004));
-                //имя хоста и порт потом поменяем
                 in = new Scanner(clientSocket.getInputStream());
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
 
