@@ -3,12 +3,11 @@ import aiosqlite
 import socket
 from client import Client
 
-
 MESSAGE_WEIGHT = 2048
 
-AUTH, SEND_MSG, SEARCH, NEW_CHAT, SGNIN = 'au', 'smg', 'srch', 'nchat', ''
-
-DELIMITER = '%%'
+AUTH, CONSULTATION, SEARCH, ACCEPT, DECLINE, SGNIN = 'client_enter', 'need_consultation', 'srch', 'accept', 'do_not_accept', 'client_registration'
+D_AUTH, D_SIGNIN = 'doctor_enter', 'doctor_registration'
+DELIMITER = ' '
 
 
 class Server:
@@ -19,45 +18,54 @@ class Server:
 
         self.socket.bind((self.connection_addres, self.connection_port))
 
-        self.users, self.loop = [], asyncio.new_event_loop()
+        self.users, self.loop = [], asyncio.get_event_loop()
 
         self.clients_active = dict()
 
-    async def run(self):
+        self.socket.listen(5)
+
+        tasks = [asyncio.ensure_future(self.accept_new_connections()), asyncio.ensure_future(self.connect_to_db()), asyncio.ensure_future(self.listen_client())]
+
+        while True:
+            self.loop.run_until_complete(asyncio.gather(*tasks))
+
+    async def connect_to_db(self):
         self.database = await aiosqlite.connect(self.database_address)
-        await self.loop.create_task(self.accept_new_connections())
 
     async def accept_new_connections(self):
-        while True:
-            client_socket, client_addres = await self.loop.sock_accept()
+        await self.listen_client()
+        client_socket, client_addres = self.socket.accept()
 
-            print('NEW CONNECTION: client addres = ', client_addres)
+        print('NEW CONNECTION: client addres = ', client_addres)
 
-            client = Client(client_socket, client_addres)
+        # client = Client(client_socket, client_addres)
 
-            self.users.append(client)
-            await self.loop.create_task(self.listen_client(client.socket))
+        self.clients_active[client_addres] = client_socket
 
-    async def listen_client(self, client_socket):
-        while True:
-            message = await self.loop.sock_recv(MESSAGE_WEIGHT)     # вот это че за хуйня? где нашел - не пойму. может сломаться
+        return client_socket, client_addres
+
+    async def listen_client(self):
+        for client in self.clients_active.keys():
+            client_socket = self.clients_active[client]
+            message = await client_socket.recv(MESSAGE_WEIGHT)
 
             print('NEW MESSAGE FROM', client_socket, message)
 
-            mode, text, *info = str(message.decode('UTF-8')).split(DELIMITER)
+            mode, *info = str(message.decode('UTF-8')).split(DELIMITER)
 
-            if mode == AUTH:
-                is_user, email, password = info
+            if mode == AUTH or mode == D_AUTH:
+                is_user = 1 if mode == AUTH else 0
+                username, usersurname, email, password, gender, age, date_of_birth = info
                 id = await self.check_auth_data(is_user, email, password)
                 if id != -1:
-                    if is_user:
-                        self.clients_active[id] = client_socket
-                    await self.send_message_to_client(self.get_user_chats(is_user, id), client_socket=client_socket)
+                    self.clients_active[id] = client_socket
+                    await self.send_message_to_client('has same user', client_socket=client_socket)
                 else:
-                    await self.send_message_to_client('AUTH_FAILED', client_socket=client_socket)
+                    await self.send_message_to_client('not same user', client_socket=client_socket)
 
-            if mode == SGNIN:
-                result = await self.sign_in_new_user(info)
+            if mode == SGNIN or mode == D_SIGNIN:
+                is_user = 1 if mode == SGNIN else 0
+                result = await self.sign_in_new_user(is_user, info)
                 await self.send_message_to_client(result, client_socket=client_socket)
 
             elif mode == SEARCH:
@@ -65,29 +73,40 @@ class Server:
                 result = await self.search_doctor(specialization, firstName, middleName, lastName, stage)
                 await self.send_message_to_client(result, client_socket=client_socket)
 
-            elif mode == SEND_MSG:
-                user_id, is_user, chat_id = info
-                await self.add_new_message_to_chat(chat_id, user_id, text)
-                await self.notify_user_about_new_message(is_user, chat_id)
+            elif mode == CONSULTATION:
+                stage = info
+                doctors = await self.search_doctor(stage=stage)
+                for doctor in doctors:
+                    if doctor in self.clients_active.keys():
+                        await self.send_message_to_client('need consultation', client_id=doctor)
 
-            elif mode == NEW_CHAT:
+            elif mode == ACCEPT or mode == DECLINE:
+                client_id = info
+                answer = 'accept' if mode == ACCEPT else 'do not accept'
+                await self.send_message_to_client(answer, client_id=client_id)
+
+                '''await self.add_new_message_to_chat(chat_id, user_id, text)
+                await self.notify_user_about_new_message(is_user, chat_id)'''
+
+            '''elif mode == NEW_CHAT:
                 user_id, doctor_id = info
                 result = await self.start_new_chat(user_id, doctor_id)
                 await self.send_message_to_client(result, user_id)
                 if result != -1:
-                    await self.send_message_to_client(DELIMITER.join([mode, user_id]), doctor_id)
+                    await self.send_message_to_client(DELIMITER.join([mode, user_id]), doctor_id)'''
 
     async def check_auth_data(self, is_user, email, password):
         table = 'users' if is_user else 'doctors'
-                                                # TODO: исправить иньекцию и добавить хеширование пароля
+        # TODO: исправить иньекцию и добавить хеширование пароля
         result = await self.database.execute(
-            "SELECT id FROM {table} WHERE email={email} AND password={password};".format(table=table, email=email, password=password))
+            "SELECT id FROM {table} WHERE email={email} AND password={password};".format(table=table, email=email,
+                                                                                         password=password))
         result = list(await result.fetchone())[0]
 
         return result if result else -1
 
     async def search_doctor(self, specialization=0, firstName=0, middleName=0, lastName=0, stage=0, urgent=False):
-        #TODO: исправить иньекцию и дописать обработку для urgent=True
+        # TODO: исправить иньекцию и дописать обработку для urgent=True
         query = 'SELECT * FROM doctors WHERE '
         delimiter = ''
 
@@ -124,9 +143,12 @@ class Server:
             try:
                 client_socket.sendall(message)
             except Exception as e:
-                print(e)        # TODO: здесь чето сломается прям жепой чувтсвую
+                for user in self.clients_active:
+                    if self.clients_active[user] == client_socket:
+                        self.clients_active.pop(user)
+                print(e)
 
-    async def get_user_chats(self, is_user, user_id):   # TODO: У каждой строки результата менять id доктора/пользователя на имя фамилиюy
+    async def get_user_chats(self, is_user, user_id):
         companion = 'doctor_id' if is_user else 'user_id'
         user = 'user_id' if is_user else 'doctor_id'
         result = await self.database.execute('SELECT id, {companion} FROM chats WHERE {user} = {user_id};')
@@ -137,38 +159,31 @@ class Server:
         try:
             await self.database.execute('INSERT INTO chats values(user_id={user_id}, doctor_id={doctor_id});')
             await self.database.commit()
-            result = await self.database.execute(f'SELECT id FROM chats WHERE user_id={user_id} and doctor_id={doctor_id};')
+            result = await self.database.execute(
+                f'SELECT id FROM chats WHERE user_id={user_id} and doctor_id={doctor_id};')
             new_chat_id = list(await result.fetchone())[0]
             return new_chat_id
         except Exception as e:
             print(e)
             return -1
 
-    async def add_new_message_to_chat(self, chat_id, sender_id, message):
-        try:
-            await self.database.execute(f'''UPDATE chats SET messages=messages+{DELIMITER + sender_id+ ':' + message} WHERE id={chat_id};''')   # здесь может быть прикол с курсором
-            await self.database.commit()
-        except Exception as e:
-            print(e)
-
     async def notify_user_about_new_message(self, is_user, chat_id):
         companion_type = 'doctor_id' if is_user else 'user_id'
         result = await self.database.execute(f'''SELECT {companion_type} FROM chats WHERE chat_id = {chat_id}''')
         companion = list(await result.fetchone())[0]
         if companion in self.clients_active:
-            await self.send_message_to_client(SEND_MSG, companion)
+            await self.send_message_to_client(f'new consultation request from {companion}', companion)
 
-    async def sign_in_new_user(self, info):
-        is_user = info[0]
+    async def sign_in_new_user(self, is_user, info):
 
         if is_user:
-            firstname, lastname, email, password, dateofbirth, weight, height, *info = info[1:]
+            firstname, lastname, email, password, gender, age, date_of_birth, weight, height = info
             query = 'firstname = {firstname}, lastname = {lastname}, email = {email}, password = {password}, dateofbirth = {dateofbirth},' \
-                    ' weight = {weight}, height = {height}, info = {info}'     # здесь может сломаться запрос, потому что тип string, а мы скобочки над {} не ставим
+                    ' weight = {weight}, height = {height}, info = {info}'  # здесь может сломаться запрос, потому что тип string, а мы скобочки над {} не ставим
         if not is_user:
-            firstname, middlename, lastname, age, specialization, email, password, stage = info[1:]
-            query = 'firstname = {firstname}, middlename = {middlename}, lastname = {lastname}, email = {email}, age = {age}, stage = {stage},' \
-                    ' specialization = {specialization}, password = {password}, info = {info}'
+            firstname, lastname, email, password, gender, age, date_of_birth, stage = info
+            query = 'firstname = {firstname}, lastname = {lastname}, email = {email}, age = {age}, dateofbirth = {date_of_birth} stage = {stage},' \
+                    ' password = {password}, info = {info}'
 
         table = 'users' if is_user else 'doctors'
         already_exists = await self.database.execute("SELECT * from {table} WHERE email={email};")
@@ -176,9 +191,10 @@ class Server:
         if not already_exists:
             await self.database.execute("INSERT INTO {table} VALUES ({query});")
             await self.database.commit()
-            result = await self.database.execute("SELECT id FROM {table} WHERE email = {email} AND password = {password};")
+            result = await self.database.execute(
+                "SELECT id FROM {table} WHERE email = {email} AND password = {password};")
             id = list(await result.fetchone())[0]
-            return id
+            return 'not same user'
         else:
-            return 'HAS SAME USER'
+            return 'has same user'
 
