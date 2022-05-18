@@ -29,26 +29,25 @@ public class Doctor_interface extends AppCompatActivity {
 
         try {
             Socket clientSocket = new Socket();
-            clientSocket.connect(new InetSocketAddress("localhost", 4004));
+            clientSocket.connect(new InetSocketAddress("localhost", 7777));
             Scanner in = new Scanner(clientSocket.getInputStream());
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 
             while (true){
                 if (in.hasNextLine()){
-                    if(in.nextLine().equals("need consultation")){
-                        give_consultation.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                out.write("accept");
-                            }
-                        });
-                        no_give_consultation.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                out.write("do_not_accept");
-                            }
-                        });
-                    }
+                    String response = in.nextLine();
+                    give_consultation.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            out.write("accept " + response);
+                        }
+                    });
+                    no_give_consultation.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            out.write("do_not_accept " + response);
+                        }
+                    });
                 }
                 change_data.setOnClickListener(new View.OnClickListener() {
                     @Override

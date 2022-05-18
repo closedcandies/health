@@ -19,7 +19,7 @@ public class Doctor_data extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_docor_data);
+        setContentView(R.layout.activity_doctor_data);
 
         user_name = findViewById(R.id.user_name);
         user_surname = findViewById(R.id.user_surname);

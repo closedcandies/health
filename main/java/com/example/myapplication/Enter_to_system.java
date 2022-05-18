@@ -14,7 +14,7 @@ public class Enter_to_system extends AppCompatActivity {
     private EditText check_user_name, check_user_surname, check_user_email, check_user_password,
             check_user_gender, check_user_age, check_user_date_of_birth;
     private Button client_finish_check, doctor_finish_check;
-    private Work_with_server work_with_server;
+    private Work_with_server wor_with_server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,14 +45,15 @@ public class Enter_to_system extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                 }
                 else{
-                    String request = new User(check_user_name.getText().toString().trim(),
-                            check_user_surname.getText().toString().trim(),
-                            check_user_email.getText().toString().trim(),
-                            check_user_password.getText().toString().trim(),
-                            check_user_gender.getText().toString().trim(),
-                            Integer.parseInt(check_user_age.getText().toString().trim()),
-                            check_user_date_of_birth.getText().toString().trim()).toString();
-                    String response = work_with_server.send_get("client_enter" + request);
+                    String request = check_user_name.getText().toString().trim() + " " +
+                            check_user_surname.getText().toString().trim() + " " +
+                            check_user_email.getText().toString().trim() + " " +
+                            check_user_password.getText().toString().trim() + " " +
+                            check_user_gender.getText().toString().trim() + " " +
+                            Integer.parseInt(check_user_age.getText().toString().trim()) + " " +
+                            check_user_date_of_birth.getText().toString().trim();
+                    Work_with_server wws = new Work_with_server();
+                    String response = wws.send_get("client_enter" + request);
                     if (!response.equals("error")){
                         if(response.equals("has same user")){
                             Intent intent = new Intent(Enter_to_system.this, Client_interface.class);
@@ -81,14 +82,14 @@ public class Enter_to_system extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                 }
                 else{
-                    String request = new User(check_user_name.getText().toString().trim(),
-                            check_user_surname.getText().toString().trim(),
-                            check_user_email.getText().toString().trim(),
-                            check_user_password.getText().toString().trim(),
-                            check_user_gender.getText().toString().trim(),
-                            Integer.parseInt(check_user_age.getText().toString().trim()),
-                            check_user_date_of_birth.getText().toString().trim()).toString();
-                    String response = work_with_server.send_get("doctor_enter" + request);
+                    String request = check_user_name.getText().toString().trim() + " " +
+                            check_user_surname.getText().toString().trim() + " " +
+                            check_user_email.getText().toString().trim() + " " +
+                            check_user_password.getText().toString().trim() + " " +
+                            check_user_gender.getText().toString().trim() + " " +
+                            Integer.parseInt(check_user_age.getText().toString().trim()) + " " +
+                            check_user_date_of_birth.getText().toString().trim();
+                    String response = wor_with_server.send_get("doctor_enter" + request);
                     if (!response.equals("error")){
                         if(response.equals("has same user")){
                             Intent intent = new Intent(Enter_to_system.this, Doctor_interface.class);
